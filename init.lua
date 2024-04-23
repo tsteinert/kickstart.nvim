@@ -584,6 +584,9 @@ require('lazy').setup({
         'djlint',
         'prettier',
         'jdtls',
+        'gopls',
+        'html-lsp',
+        'lua-language-server',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
