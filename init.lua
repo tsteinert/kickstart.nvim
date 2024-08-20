@@ -300,6 +300,9 @@ require('lazy').setup({
         { '<leader>w', group = '[W]orkspace' },
       }
     end,
+    dependencies = {
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+    },
   },
 
   -- NOTE: Plugins can specify dependencies.
