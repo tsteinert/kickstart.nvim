@@ -782,6 +782,28 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'kylechui/nvim-surround',
+    version = '*', -- Use for stability; omit to use `main` branch for the latest features
+    event = 'VeryLazy',
+    config = function()
+      require('nvim-surround').setup {
+        -- Configuration here, or leave empty to use defaults
+        keymaps = {
+          insert_line = '<C-g>S',
+          normal = 'gys',
+          normal_cur = 'gyss',
+          normal_line = 'gyS',
+          normal_cur_line = 'gySS',
+          visual = 'S',
+          visual_line = 'gS',
+          delete = 'gds',
+          change = 'gcs',
+          change_lineg = 'gcS',
+        },
+      }
+    end,
+  },
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
@@ -801,7 +823,7 @@ require('lazy').setup({
       -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      -- require('mini.surround').setup()
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
