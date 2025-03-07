@@ -143,6 +143,7 @@ vim.opt.splitbelow = true
 --  See `:help 'list'`
 --  and `:help 'listchars'`
 vim.opt.list = true
+---@diagnostic disable-next-line: missing-fields
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Preview substitutions live, as you type!
@@ -241,7 +242,11 @@ require('lazy').setup({
       'nvim-tree/nvim-web-devicons',
     },
     config = function()
-      require('nvim-tree').setup {}
+      require('nvim-tree').setup {
+        view = {
+          adaptive_size = true,
+        },
+      }
     end,
   },
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
@@ -309,6 +314,7 @@ require('lazy').setup({
       }
     end,
     dependencies = {
+      ---@diagnostic disable-next-line: missing-fields
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
   },
@@ -339,6 +345,7 @@ require('lazy').setup({
           return vim.fn.executable 'make' == 1
         end,
       },
+      ---@diagnostic disable-next-line: missing-fields
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
@@ -848,6 +855,11 @@ require('lazy').setup({
       statusline.section_location = function()
         return '%2l:%-2v'
       end
+
+      local indentscope = require 'mini.indentscope'
+      indentscope.setup {}
+      local pairs = require 'mini.pairs'
+      pairs.setup {}
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
