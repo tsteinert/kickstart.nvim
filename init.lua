@@ -226,6 +226,19 @@ vim.opt.rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   {
+    'mbbill/undotree',
+    keys = {
+      { '<leader>u', '<cmd>UndotreeToggle<cr>', desc = 'Toggle undotree' },
+    },
+    config = function()
+      -- Configuration goes here
+    end,
+  },
+  {
+    'Exafunction/windsurf.vim',
+    event = 'BufEnter',
+  },
+  {
     'akinsho/flutter-tools.nvim',
     lazy = false,
     dependencies = {
@@ -272,6 +285,12 @@ require('lazy').setup({
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
+      current_line_blame = true, -- shows blame inline at end of line
+      current_line_blame_opts = {
+        delay = 500,
+        virt_text_pos = 'eol', -- or 'overlay' or 'right_align'
+      },
+      current_line_blame_formatter = '<author>, <author_time:%Y-%m-%d> - <summary>',
       signs = {
         add = { text = '+' },
         change = { text = '~' },
@@ -441,12 +460,24 @@ require('lazy').setup({
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
-      -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
       { 'j-hui/fidget.nvim', opts = {} },
 
-      -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
-      -- used for completion, annotations and signatures of Neovim apis
-      { 'folke/neodev.nvim', opts = {} },
+      -- IMPORTANT: neodev must be loaded before lspconfig
+      {
+        'folke/neodev.nvim',
+        priority = 1000,
+        config = function()
+          require('neodev').setup {
+            library = {
+              enabled = true,
+              runtime = true,
+              types = true,
+              plugins = true,
+            },
+            setup_jsonls = true,
+          }
+        end,
+      },
     },
     config = function()
       -- Brief aside: **What is LSP?**
@@ -591,12 +622,22 @@ require('lazy').setup({
               completion = {
                 callSnippet = 'Replace',
               },
+              diagnostics = {
+                globals = { 'vim' },
+              },
+              workspace = { -- Fixed typo: was "workspae"
+                library = vim.api.nvim_get_runtime_file('', true),
+                checkThirdParty = false,
+              },
+              telemetry = {
+                enable = false,
+              },
               -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
               -- diagnostics = { disable = { 'missing-fields' } },
             },
           },
         },
-      }
+      } -- Fixed: Added missing closing brace
 
       -- Ensure the servers and tools above are installed
       --  To check the current status of installed tools and/or manually install
@@ -634,7 +675,6 @@ require('lazy').setup({
       }
     end,
   },
-
   { -- Autoformat
     'stevearc/conform.nvim',
     lazy = false,
@@ -772,11 +812,13 @@ require('lazy').setup({
           --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
         },
         sources = {
+          -- { name = 'gpt4' },
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
         },
       }
+      -- require('cmp').register_source('gpt4', require('cmp_gpt4').new())
     end,
   },
 
