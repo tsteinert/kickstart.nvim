@@ -201,7 +201,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
-    vim.highlight.on_yank()
+    vim.hl.on_yank()
   end,
 })
 
@@ -225,6 +225,14 @@ vim.opt.rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
+  {
+    'mfussenegger/nvim-jdtls',
+    dependencies = { 'folke/which-key.nvim' },
+    ft = { 'java' },
+    config = function()
+      -- This will be handled by ftplugin/java.lua
+    end,
+  },
   {
     'mbbill/undotree',
     keys = {
