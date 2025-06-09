@@ -239,7 +239,7 @@ require('lazy').setup({
       { '<leader>u', '<cmd>UndotreeToggle<cr>', desc = 'Toggle undotree' },
     },
     config = function()
-      -- Configuration goes here
+      vim.g.undotree_WindowLayout = 2
     end,
   },
   {
