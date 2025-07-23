@@ -711,7 +711,7 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         java = { 'google-java-format' },
-        html = { 'prettier' },
+        html = { 'djlint' },
         xml = { 'xmlformat' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
