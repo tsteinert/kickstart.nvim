@@ -2,7 +2,27 @@ local jdtls = require 'jdtls'
 
 -- Determine workspace directory
 local home = os.getenv 'HOME'
-local workspace_path = home .. '/.local/share/eclipse/' .. vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
+
+-- Skip starting JDTLS for virtual/decompiled buffers (e.g., jdt://, jar:) or non-file buffers
+local bufname = vim.api.nvim_buf_get_name(0)
+if bufname:match('^jdt://') or bufname:match('^jar:') or vim.bo.buftype ~= '' then
+  return
+end
+
+-- Prefer Git root for multi-module projects, else fall back to Maven/Gradle markers
+local git_root = require('jdtls.setup').find_root { '.git' }
+local root_dir = git_root or require('jdtls.setup').find_root { 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' }
+if not root_dir or root_dir == '' then
+  vim.notify('jdtls: could not find project root', vim.log.levels.ERROR)
+  return
+end
+local workspace_path = home .. '/.local/share/eclipse/' .. vim.fn.fnamemodify(root_dir, ':p:h:t')
+-- Resolve JDK 24 via macOS java_home
+local java_home_24 = vim.fn.system('/usr/libexec/java_home -v 24'):gsub('%s+$', '')
+if java_home_24 == '' then
+  vim.notify('jdtls: JDK 24 not found. Install it or adjust java_home resolution.', vim.log.levels.ERROR)
+  return
+end
 
 -- Find the jdtls installation
 local mason_path = vim.fn.stdpath 'data' .. '/mason'
@@ -16,28 +36,26 @@ end
 
 local config = {
   cmd = {
-    'java',
+    java_home_24 .. '/bin/java',
     '-Declipse.application=org.eclipse.jdt.ls.core.id1',
     '-Dosgi.bundles.defaultStartLevel=4',
     '-Declipse.product=org.eclipse.jdt.ls.core.product',
     '-Dlog.protocol=true',
     '-Dlog.level=ALL',
     '-Xms1g',
-    '--add-modules=ALL-SYSTEM',
     '--add-opens',
     'java.base/java.util=ALL-UNNAMED',
     '--add-opens',
     'java.base/java.lang=ALL-UNNAMED',
-    '--enable-native-access=ALL-UNNAMED',
     '-jar',
     launcher_jar,
     '-configuration',
-    jdtls_path .. '/config_mac',
+    jdtls_path .. '/config_mac_arm',
     '-data',
     workspace_path,
   },
 
-  root_dir = require('jdtls.setup').find_root { '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' },
+  root_dir = root_dir,
 
   settings = {
     java = {
@@ -45,8 +63,12 @@ local config = {
         downloadSources = true,
       },
       configuration = {
-        updateBuildConfiguration = 'interactive',
+        updateBuildConfiguration = 'automatic',
         runtimes = {
+          {
+            name = 'JavaSE-24',
+            path = java_home_24,
+          },
           {
             name = 'JavaSE-21',
             path = '/Library/Java/JavaVirtualMachines/liberica-jdk-21-full.jdk/Contents/Home',
