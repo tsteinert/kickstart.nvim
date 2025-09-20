@@ -16,7 +16,8 @@ if not root_dir or root_dir == '' then
   vim.notify('jdtls: could not find project root', vim.log.levels.ERROR)
   return
 end
-local workspace_path = home .. '/.local/share/eclipse/' .. vim.fn.fnamemodify(root_dir, ':p:h:t')
+local project_name = vim.fn.fnamemodify(root_dir, ':p:h:t')
+local workspace_path = vim.fn.stdpath('data') .. '/jdtls/' .. project_name .. '_' .. vim.fn.sha256(root_dir):sub(1, 8)
 -- Resolve JDK 24 via macOS java_home
 local java_home_24 = vim.fn.system('/usr/libexec/java_home -v 24'):gsub('%s+$', '')
 if java_home_24 == '' then
