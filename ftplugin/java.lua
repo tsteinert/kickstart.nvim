@@ -5,7 +5,7 @@ local home = os.getenv 'HOME'
 
 -- Skip starting JDTLS for virtual/decompiled buffers (e.g., jdt://, jar:) or non-file buffers
 local bufname = vim.api.nvim_buf_get_name(0)
-if bufname:match('^jdt://') or bufname:match('^jar:') or vim.bo.buftype ~= '' then
+if bufname:match '^jdt://' or bufname:match '^jar:' or vim.bo.buftype ~= '' then
   return
 end
 
@@ -13,17 +13,30 @@ end
 local git_root = require('jdtls.setup').find_root { '.git' }
 local root_dir = git_root or require('jdtls.setup').find_root { 'mvnw', 'gradlew', 'pom.xml', 'build.gradle' }
 if not root_dir or root_dir == '' then
-  vim.notify('jdtls: could not find project root', vim.log.levels.ERROR)
+  vim.notify('jdtls: could not find project root', vim.log.levels.WARN)
   return
 end
 local project_name = vim.fn.fnamemodify(root_dir, ':p:h:t')
-local workspace_path = vim.fn.stdpath('data') .. '/jdtls/' .. project_name .. '_' .. vim.fn.sha256(root_dir):sub(1, 8)
--- Resolve JDK 24 via macOS java_home
-local java_home_24 = vim.fn.system('/usr/libexec/java_home -v 24'):gsub('%s+$', '')
-if java_home_24 == '' then
-  vim.notify('jdtls: JDK 24 not found. Install it or adjust java_home resolution.', vim.log.levels.ERROR)
-  return
+local workspace_path = vim.fn.stdpath 'data' .. '/jdtls/' .. project_name .. '_' .. vim.fn.sha256(root_dir):sub(1, 8)
+-- Resolve Java runtimes on macOS via java_home; fall back to $JAVA_HOME or 'java' on PATH
+local function try_java_home(version)
+  local out = vim.fn.system('/usr/libexec/java_home -v ' .. version):gsub('%s+$', '')
+  if out ~= '' then
+    return out
+  end
 end
+
+local java_homes = {}
+for _, v in ipairs { '24', '21', '17' } do
+  local p = try_java_home(v)
+  if p and p ~= '' then
+    table.insert(java_homes, { name = 'JavaSE-' .. v, path = p })
+  end
+end
+
+local java_from_env = os.getenv 'JAVA_HOME'
+local chosen_java_home = java_homes[1] and java_homes[1].path or ((java_from_env and java_from_env ~= '') and java_from_env or nil)
+local java_cmd = (chosen_java_home and (chosen_java_home .. '/bin/java')) or 'java'
 
 -- Find the jdtls installation
 local mason_path = vim.fn.stdpath 'data' .. '/mason'
@@ -34,15 +47,27 @@ if launcher_jar == '' then
   vim.notify('jdtls launcher jar not found', vim.log.levels.ERROR)
   return
 end
+if launcher_jar:find '\n' then
+  launcher_jar = vim.split(launcher_jar, '\n')[1]
+end
+
+-- Determine JDTLS platform config directory
+local sysname = (vim.uv or vim.loop).os_uname().sysname
+local config_dir = 'config_mac'
+if sysname == 'Linux' then
+  config_dir = 'config_linux'
+elseif sysname:match 'Windows' then
+  config_dir = 'config_win'
+end
 
 local config = {
   cmd = {
-    java_home_24 .. '/bin/java',
+    java_cmd,
     '-Declipse.application=org.eclipse.jdt.ls.core.id1',
     '-Dosgi.bundles.defaultStartLevel=4',
     '-Declipse.product=org.eclipse.jdt.ls.core.product',
     '-Dlog.protocol=true',
-    '-Dlog.level=ALL',
+    '-Dlog.level=WARN',
     '-Xms1g',
     '--add-opens',
     'java.base/java.util=ALL-UNNAMED',
@@ -51,10 +76,12 @@ local config = {
     '-jar',
     launcher_jar,
     '-configuration',
-    jdtls_path .. '/config_mac_arm',
+    jdtls_path .. '/' .. config_dir,
     '-data',
     workspace_path,
   },
+
+  cmd_env = chosen_java_home and { JAVA_HOME = chosen_java_home } or nil,
 
   root_dir = root_dir,
 
@@ -65,20 +92,7 @@ local config = {
       },
       configuration = {
         updateBuildConfiguration = 'automatic',
-        runtimes = {
-          {
-            name = 'JavaSE-24',
-            path = java_home_24,
-          },
-          {
-            name = 'JavaSE-21',
-            path = '/Library/Java/JavaVirtualMachines/liberica-jdk-21-full.jdk/Contents/Home',
-          },
-          {
-            name = 'JavaSE-17',
-            path = '/Library/Java/JavaVirtualMachines/liberica-jdk-17-full.jdk/Contents/Home',
-          },
-        },
+        runtimes = java_homes,
       },
       maven = {
         downloadSources = true,

@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -155,7 +155,9 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 15
 
--- [[ Basic Keymaps ]]
+-- Add Mason bin to PATH so conform can find installed formatters
+vim.env.PATH = vim.fn.stdpath 'data' .. '/mason/bin:' .. vim.env.PATH -- [[ Basic Keymaps ]]
+
 --  See `:help vim.keymap.set()`
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
@@ -258,7 +260,7 @@ require('lazy').setup({
   {
     'nvim-tree/nvim-tree.lua',
     version = '*',
-    lazy = false,
+    cmd = { 'NvimTreeToggle', 'NvimTreeFindFile' },
     dependencies = {
       'nvim-tree/nvim-web-devicons',
     },
@@ -305,6 +307,15 @@ require('lazy').setup({
         delete = { text = '_' },
         topdelete = { text = '‾' },
         changedelete = { text = '~' },
+      },
+    },
+    keys = {
+      {
+        '<leader>tb',
+        function()
+          require('gitsigns').toggle_current_line_blame()
+        end,
+        desc = 'Toggle line blame',
       },
     },
   },
@@ -411,9 +422,7 @@ require('lazy').setup({
         -- },
         -- pickers = {}
         extensions = {
-          ['ui-select'] = {
-            require('telescope.themes').get_dropdown(),
-          },
+          ['ui-select'] = require('telescope.themes').get_dropdown(),
         },
       }
 
@@ -662,6 +671,8 @@ require('lazy').setup({
         'stylua', -- Used to format Lua code
         'djlint',
         'prettier',
+        'google-java-format',
+        'markdownlint-cli2',
         'jdtls',
         'gopls',
         'html-lsp',
@@ -865,7 +876,7 @@ require('lazy').setup({
           visual_line = 'gS',
           delete = 'gds',
           change = 'gcs',
-          change_lineg = 'gcS',
+          change_line = 'gcS',
         },
       }
     end,
@@ -924,7 +935,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'html', 'java', 'json', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'regex', 'vim', 'vimdoc', 'yaml' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {

@@ -14,7 +14,7 @@ end
 function source:complete(params, callback)
   local bufnr = vim.api.nvim_get_current_buf()
   local line = params.context.cursor.row -- This is a number (1-based)
-  local start_line = math.max(0, line - 50) -- Lua indices are 1-based, but nvim_buf_get_lines is 0-based
+  local start_line = math.max(0, line - 500) -- Lua indices are 1-based, but nvim_buf_get_lines is 0-based
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_line, line - 1, false)
   local prompt = table.concat(lines, '\n')
 
@@ -30,7 +30,8 @@ function source:complete(params, callback)
   end
 
   local data = vim.fn.json_encode {
-    model = 'gpt-4.1', -- or your available GPT-4.1 model
+    model = 'gpt-5', -- or your available GPT-4.1 model
+    -- model = 'gpt-4.1', -- or your available GPT-4.1 model
     messages = {
       {
         role = 'system',
@@ -38,7 +39,7 @@ function source:complete(params, callback)
       },
       { role = 'user', content = prompt },
     },
-    max_tokens = 256,
+    max_tokens = 1024,
     temperature = 0.2,
   }
 
