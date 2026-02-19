@@ -30,7 +30,7 @@ function source:complete(params, callback)
   end
 
   local data = vim.fn.json_encode {
-    model = 'gpt-5', -- or your available GPT-4.1 model
+    model = 'gpt-5.1', -- or your available GPT-4.1 model
     -- model = 'gpt-4.1', -- or your available GPT-4.1 model
     messages = {
       {
@@ -62,9 +62,9 @@ function source:complete(params, callback)
       local ok, decoded = pcall(vim.json.decode, result)
       if ok and decoded then
         if decoded.error then
-          print('GPT-4 API error: ' .. decoded.error.message)
+          print('GPT-5 API error: ' .. decoded.error.message)
           callback {
-            { label = 'GPT-4.1 error: ' .. decoded.error.message, kind = cmp.lsp.CompletionItemKind.Text },
+            { label = 'GPT-5.1 error: ' .. decoded.error.message, kind = cmp.lsp.CompletionItemKind.Text },
           }
         elseif decoded.choices and decoded.choices[1] then
           local text = decoded.choices[1].message.content
@@ -72,15 +72,15 @@ function source:complete(params, callback)
             { label = text, kind = cmp.lsp.CompletionItemKind.Text },
           }
         else
-          print('GPT-4 API: Unexpected response: ' .. result)
+          print('GPT-5 API: Unexpected response: ' .. result)
           callback {
-            { label = 'GPT-4.1 error or no response', kind = cmp.lsp.CompletionItemKind.Text },
+            { label = 'GPT-5.1 error or no response', kind = cmp.lsp.CompletionItemKind.Text },
           }
         end
       else
-        print('GPT-4 API: Could not decode response: ' .. result)
+        print('GPT-5 API: Could not decode response: ' .. result)
         callback {
-          { label = 'GPT-4.1 error or no response', kind = cmp.lsp.CompletionItemKind.Text },
+          { label = 'GPT-5.1 error or no response', kind = cmp.lsp.CompletionItemKind.Text },
         }
       end
     end,
