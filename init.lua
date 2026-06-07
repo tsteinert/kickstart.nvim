@@ -247,6 +247,15 @@ require('lazy').setup({
   {
     'Exafunction/windsurf.vim',
     event = 'BufEnter',
+    init = function()
+      -- Force correct platform detection so the plugin doesn't try to launch
+      -- the Windows .exe binary on macOS.
+      if vim.fn.has 'mac' == 1 then
+        vim.g.codeium_os = 'Darwin'
+        local arch = vim.trim(vim.fn.system 'uname -m')
+        vim.g.codeium_arch = arch ~= '' and arch or 'arm64'
+      end
+    end,
   },
   {
     'akinsho/flutter-tools.nvim',
@@ -367,7 +376,7 @@ require('lazy').setup({
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
-    branch = '0.1.x',
+    branch = 'master',
     dependencies = {
       'nvim-lua/plenary.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
@@ -619,6 +628,7 @@ require('lazy').setup({
         -- clangd = {},
         gopls = {},
         html = {},
+        ols = {},
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -683,6 +693,9 @@ require('lazy').setup({
       require('mason-lspconfig').setup {
         handlers = {
           function(server_name)
+            if server_name == 'jdtls' then
+              return
+            end
             local server = servers[server_name] or {}
             -- This handles overriding only values explicitly passed
             -- by the server configuration above. Useful when disabling
@@ -864,21 +877,7 @@ require('lazy').setup({
     version = '*', -- Use for stability; omit to use `main` branch for the latest features
     event = 'VeryLazy',
     config = function()
-      require('nvim-surround').setup {
-        -- Configuration here, or leave empty to use defaults
-        keymaps = {
-          insert_line = '<C-g>S',
-          normal = 'gys',
-          normal_cur = 'gyss',
-          normal_line = 'gyS',
-          normal_cur_line = 'gySS',
-          visual = 'S',
-          visual_line = 'gS',
-          delete = 'gds',
-          change = 'gcs',
-          change_line = 'gcS',
-        },
-      }
+      require('nvim-surround').setup {}
     end,
   },
   -- Highlight todo, notes, etc in comments
